@@ -930,7 +930,16 @@ def perform_scan(target_url):
             formatted_cards.append(card)
 
     try:
-        res = requests.get(base_url, timeout=REQUEST_TIMEOUT, verify=False, allow_redirects=True, headers={"User-Agent": "WebSecChecker-Scanner/3.0"})
+        res = requests.get(
+            base_url,
+            timeout=(5, 20),
+            verify=False,
+            allow_redirects=True,
+            headers={
+                "User-Agent": "Mozilla/5.0"
+            }
+        )
+
         sec_headers = {
             "X-Frame-Options": "Clickjacking protection",
             "Content-Security-Policy": "XSS impact reduction",
@@ -949,7 +958,20 @@ def perform_scan(target_url):
                 ev = Evidence(finding_type="header", target=base_url, header_name=header)
                 decision = SCORING.score_header(ev)
                 kb = get_header_entry(header)
-                formatted_cards.append(create_card_html("🛡️ HEADER", "#ffc107", f"Missing Header: {sanitize(header)}", desc, decision["score"], decision["severity"], decision["reason"], decision["solution"], decision["confidence"], "Header tidak ditemukan pada response utama", decision.get("metrics"), OwaspMapper.classify(ev)))
+                formatted_cards.append(create_card_html(
+                    "🛡️ HEADER",
+                    "#ffc107",
+                    f"Missing Header: {sanitize(header)}",
+                    desc,
+                    decision["score"],
+                    decision["severity"],
+                    decision["reason"],
+                    decision["solution"],
+                    decision["confidence"],
+                    "Header tidak ditemukan pada response utama",
+                    decision.get("metrics"),
+                    OwaspMapper.classify(ev)
+                ))
                 update_risk(decision["score"], decision["severity"])
             else:
                 present_headers.append(header)
@@ -967,8 +989,13 @@ def perform_scan(target_url):
                 80,
                 evidence="Headers terdeteksi: " + ", ".join(present_headers),
                 metrics=None,
-                owasp={"id": "N/A", "name": "Informational / Hardened", "reason": "Tidak ada missing header utama pada response utama."}
+                owasp={
+                    "id": "N/A",
+                    "name": "Informational / Hardened",
+                    "reason": "Tidak ada missing header utama pada response utama."
+                }
             ))
+
     except requests.RequestException as e:
         formatted_cards.append(create_card_html(
             "🛡️ HEADER",
@@ -982,9 +1009,12 @@ def perform_scan(target_url):
             0,
             evidence="Header check gagal dieksekusi.",
             metrics=None,
-            owasp={"id": "N/A", "name": "Scan Error", "reason": "Request gagal sehingga security headers tidak dapat diperiksa."}
+            owasp={
+                "id": "N/A",
+                "name": "Scan Error",
+                "reason": "Request gagal sehingga security headers tidak dapat diperiksa."
+            }
         ))
-
     try:
         nm = nmap.PortScanner()
         scan_ports = "21,22,23,25,53,80,443,3306,3389,5432,6379,8080,8443,9200,27017"
