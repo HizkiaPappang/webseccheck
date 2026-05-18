@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Laporan Audit Keamanan - {{ scan.target_url }}</title>
+    <style>
+      @page { size: A4; margin: 1.6cm; }
+      body { font-family: Helvetica, Arial, sans-serif; color: #172033; font-size: 13px; line-height: 1.55; }
+      .cover { border-radius: 18px; padding: 26px; background: #eef5ff; border: 1px solid #cfe1ff; margin-bottom: 22px; }
+      .cover h1 { margin: 0 0 6px; font-size: 24px; color: #0b3b75; text-transform: uppercase; }
+      .cover p { margin: 0; color: #53627a; }
+      .summary { width: 100%; border-collapse: collapse; margin: 18px 0 26px; }
+      .summary td { padding: 13px 15px; border: 1px solid #dbe3ef; vertical-align: top; }
+      .summary .label { width: 28%; background: #f8fafc; font-weight: bold; color: #475467; }
+      .risk { font-size: 25px; font-weight: 900; }
+      .risk-critical { color: #212529; }
+      .risk-high { color: #dc3545; }
+      .risk-medium { color: #d97706; }
+      .risk-low { color: #198754; }
+      .risk-info { color: #0d6efd; }
+      .section-title { font-size: 17px; color: #172033; border-bottom: 2px solid #dbe3ef; padding-bottom: 7px; margin: 24px 0 14px; }
+      .note { background: #f8fafc; border: 1px solid #e5e7eb; border-left: 5px solid #0d6efd; border-radius: 10px; padding: 12px; color: #475467; margin-bottom: 18px; }
+      .finding-card { background: #fff; border: 1px solid #e5e7eb; border-left: 6px solid #64748b; border-radius: 10px; padding: 13px; margin-bottom: 12px; page-break-inside: avoid; }
+      .finding-top { width: 100%; margin-bottom: 8px; }
+      .finding-badge, .finding-pill { display: inline-block; color: #fff; padding: 3px 8px; border-radius: 999px; font-size: 9px; font-weight: bold; margin-right: 5px; text-transform: uppercase; }
+      .finding-title { font-weight: bold; color: #172033; margin-bottom: 4px; font-size: 13px; }
+      .finding-body { color: #475467; font-size: 11.5px; word-break: break-word; }
+      .finding-detail { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #d7dce5; }
+      .finding-detail p { margin: 3px 0; font-size: 11px; color: #374151; }
+      .finding-evidence { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 7px; margin-bottom: 6px; font-size: 10.5px; color: #334155; }
+      .code-box { background: #0f172a; color: #e5e7eb; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 10px; max-height: 220px; overflow: hidden; margin-top: 8px; }
+      .compact-list { margin: 5px 0 0; padding-left: 18px; font-size: 11px; }
+      .muted-small { color: #667085; font-size: 10px; margin: 5px 0 0; }
+
+      .cvss-detail-box {
+        margin: 10px 0 8px;
+        background: #ffffff;
+        border: 1px solid #dbe3ef;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: .78rem;
+      }
+      .cvss-detail-box summary { cursor: pointer; color: #0d6efd; }
+      .cvss-vector {
+        margin: 8px 0;
+        padding: 7px 9px;
+        background: #eef5ff;
+        border-radius: 8px;
+        font-family: Consolas, monospace;
+        color: #0f172a;
+        word-break: break-word;
+      }
+      .cvss-matrix-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 8px 0;
+        font-size: .76rem;
+      }
+      .cvss-matrix-table th,
+      .cvss-matrix-table td {
+        border: 1px solid #e5e7eb;
+        padding: 6px 7px;
+        vertical-align: top;
+      }
+      .cvss-matrix-table th {
+        background: #f8fafc;
+        color: #475467;
+      }
+      .cvss-formula-box {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 8px 10px;
+        color: #334155;
+      }
+      .cvss-formula-box ol { margin: 6px 0 0; padding-left: 18px; }
+      .cvss-formula-box li { margin-bottom: 3px; }
+      a { color: #0d6efd; text-decoration: none; }
+      .footer { margin-top: 34px; padding-top: 12px; border-top: 1px solid #dbe3ef; text-align: center; color: #667085; font-size: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <h1>Laporan Audit Keamanan Website</h1>
+      <p>WebSec Checker · Evidence-Based Dynamic CVSS & OWASP 2025 Scanner</p>
+    </div>
+
+    <table class="summary">
+      <tr><td class="label">Target Analisis</td><td><strong>{{ scan.target_url }}</strong></td></tr>
+      <tr><td class="label">Tanggal & Waktu</td><td>{{ scan.timestamp.strftime('%d %B %Y - %H:%M WITA') }}</td></tr>
+      <tr>
+        <td class="label">Tingkat Risiko</td>
+        <td>
+          <span class="risk {% if scan.overall_risk == 'Critical' %}risk-critical{% elif scan.overall_risk == 'High' %}risk-high{% elif scan.overall_risk == 'Medium' %}risk-medium{% elif scan.overall_risk == 'Low' %}risk-low{% else %}risk-info{% endif %}">{{ scan.overall_risk | upper }}</span>
+          <div style="font-size:11px;color:#667085;">Severity dihitung berdasarkan evidence, CVSS v3.1 dinamis, dan klasifikasi OWASP Top 10:2025.</div>
+        </td>
+      </tr>
+    </table>
+
+    <div class="note">
+      <strong>Metodologi:</strong> Sistem menggunakan dynamic OWASP Top 10:2025 mapping, CVSS v3.1, dan evidence analysis. Sistem mengumpulkan evidence seperti status HTTP, content-type, similarity terhadap baseline 404, pola data sensitif, port terbuka, service version, SSL, dan security headers. CVSS dibentuk dinamis berdasarkan evidence, bukan hanya berdasarkan nama path atau port.
+    </div>
+
+    <h3 class="section-title">Rincian Temuan & Rekomendasi</h3>
+    {{ scan.vulnerabilities | safe }}
+
+    <div class="footer">
+      Laporan dibuat otomatis oleh WebSec Checker · Website Security Audit System
+    </div>
+  </body>
+</html>

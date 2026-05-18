@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+
+  # DATABASE MYSQL
+  db:
+    image: mysql:8.0
+    container_name: websec_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: websec_db
+      TZ: Asia/Makassar
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - websec_network
+
+  # APLIKASI FLASK
+  web:
+    build: .
+    container_name: websec_app
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASS: root123
+      DB_NAME: websec_db
+      SECRET_KEY: kunci_rahasia_aplikasi
+      TZ: Asia/Makassar
+    depends_on:
+      - db
+    networks:
+      - websec_network
+
+  # PHPMYADMIN
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: websec_phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root123
+    depends_on:
+      - db
+    networks:
+      - websec_network
+
+volumes:
+  mysql_data:
+
+networks:
+  websec_network:
+    driver: bridge

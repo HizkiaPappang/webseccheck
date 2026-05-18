@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSec Checker - Dashboard TA</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      :root {
+        --primary: #0d6efd;
+        --bg: #f4f7fb;
+        --dark: #172033;
+        --muted: #6b7280;
+        --card: #ffffff;
+        --line: #e5e7eb;
+      }
+      body {
+        background:
+          radial-gradient(circle at top left, #eaf2ff 0, transparent 34%),
+          var(--bg);
+        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: var(--dark);
+      }
+      .navbar {
+        background: linear-gradient(135deg, #0d6efd, #084298) !important;
+      }
+      .navbar-brand {
+        font-weight: 800;
+        letter-spacing: 0.2px;
+      }
+      .hero-card,
+      .card-custom {
+        border: 1px solid rgba(13, 110, 253, 0.08);
+        border-radius: 20px;
+        box-shadow: 0 14px 38px rgba(15, 23, 42, 0.07);
+        background: rgba(255, 255, 255, 0.95);
+      }
+      .hero-title {
+        font-weight: 900;
+        letter-spacing: -0.6px;
+        color: #172033;
+      }
+      .subtitle {
+        color: var(--muted);
+      }
+      .input-url {
+        border-radius: 14px 0 0 14px;
+        padding: 14px;
+      }
+      .btn-scan {
+        border-radius: 0 14px 14px 0;
+        padding: 12px 26px;
+        font-weight: 800;
+      }
+      .stat-card {
+        background: linear-gradient(180deg, #fff, #f8fbff);
+        border-radius: 18px;
+        padding: 20px;
+        height: 100%;
+      }
+      .table thead th {
+        font-size: 0.74rem;
+        letter-spacing: 0.04em;
+        color: #667085;
+      }
+      .risk-pill {
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-weight: 800;
+        font-size: 0.76rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      }
+      .modal-content {
+        border: 0;
+        border-radius: 22px;
+        overflow: hidden;
+      }
+      .modal-header {
+        background: linear-gradient(135deg, #f8fbff, #eef5ff);
+        border-bottom: 1px solid var(--line);
+      }
+      .summary-box {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #f9fafb;
+        padding: 18px;
+      }
+      .finding-card {
+        background: #fff;
+        border: 1px solid #edf0f5;
+        border-left: 6px solid #64748b;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+      }
+      .finding-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .finding-badge,
+      .finding-pill {
+        display: inline-block;
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+        margin-right: 6px;
+        letter-spacing: 0.02em;
+      }
+      .finding-title {
+        font-weight: 800;
+        color: #172033;
+        margin-bottom: 5px;
+      }
+      .finding-body {
+        font-size: 0.88rem;
+        color: #475467;
+        word-break: break-word;
+      }
+      .finding-detail {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed #d7dce5;
+        color: #475467;
+      }
+      .finding-detail p {
+        margin: 4px 0;
+        font-size: 0.82rem;
+      }
+      .finding-evidence {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        padding: 9px 10px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        font-size: 0.78rem;
+        color: #334155;
+      }
+      .stat-card {
+        background: linear-gradient(180deg, #fff, #f8fbff);
+        border-radius: 18px;
+        padding: 20px;
+        height: 320px; /* FIXED HEIGHT */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .code-box {
+        background: #0f172a;
+        color: #e5e7eb;
+        padding: 12px;
+        border-radius: 12px;
+        font-family: Consolas, monospace;
+        font-size: 0.75rem;
+        max-height: 220px;
+        overflow: auto;
+        margin-top: 10px;
+      }
+      .compact-list {
+        margin: 8px 0 0;
+        padding-left: 18px;
+        font-size: 0.84rem;
+      }
+      .muted-small {
+        color: #667085;
+        font-size: 0.78rem;
+        margin: 8px 0 0;
+      }
+
+      .cvss-detail-box {
+        margin: 10px 0 8px;
+        background: #ffffff;
+        border: 1px solid #dbe3ef;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 0.78rem;
+      }
+      .cvss-detail-box summary {
+        cursor: pointer;
+        color: #0d6efd;
+      }
+      .cvss-vector {
+        margin: 8px 0;
+        padding: 7px 9px;
+        background: #eef5ff;
+        border-radius: 8px;
+        font-family: Consolas, monospace;
+        color: #0f172a;
+        word-break: break-word;
+      }
+      .cvss-matrix-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 8px 0;
+        font-size: 0.76rem;
+      }
+      .cvss-matrix-table th,
+      .cvss-matrix-table td {
+        border: 1px solid #e5e7eb;
+        padding: 6px 7px;
+        vertical-align: top;
+      }
+      .cvss-matrix-table th {
+        background: #f8fafc;
+        color: #475467;
+      }
+      .cvss-formula-box {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 8px 10px;
+        color: #334155;
+      }
+      .cvss-formula-box ol {
+        margin: 6px 0 0;
+        padding-left: 18px;
+      }
+      .cvss-formula-box li {
+        margin-bottom: 3px;
+      }
+      @media print {
+        .navbar,
+        .btn,
+        footer,
+        #scanForm {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4 shadow-sm sticky-top">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+          <span class="d-inline-flex align-items-center justify-content-center bg-white text-primary rounded-3 me-2" style="width:40px;height:40px;">
+            <i class="fas fa-shield-alt"></i>
+          </span>
+          <span>WebSec Checker</span>
+        </a>
+        <div class="d-flex align-items-center">
+          <span class="navbar-text text-white small d-none d-md-block me-3">
+            Halo, {{ current_user.username }}
+          </span>
+          <a
+            href="{{ url_for('main.logout') }}"
+            class="btn btn-light btn-sm fw-bold rounded-pill px-3"
+          >
+            <i class="fas fa-sign-out-alt me-1"></i> Keluar
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container pb-5">
+      <div class="hero-card p-4 p-lg-5 mb-4">
+        <div class="row g-4 align-items-center">
+          <div class="col-lg-7">
+            <h2 class="hero-title mb-2">Dashboard Analisis Keamanan Website</h2>
+            <p class="subtitle mb-0">
+              Pemindaian berbasis evidence: response HTTP, port, SSL, headers,
+              OSINT, OWASP 2025, dan CVSS dinamis.
+            </p>
+          </div>
+          <div class="col-lg-5">
+            <form action="/scan" method="POST" id="scanForm">
+              <label class="form-label text-muted fw-semibold"
+                >Target URL Website</label
+              >
+              <div class="input-group input-group-lg shadow-sm">
+                <span class="input-group-text bg-white border-end-0"
+                  ><i class="fas fa-globe text-primary"></i
+                ></span>
+                <input
+                  type="url"
+                  class="form-control input-url border-start-0"
+                  name="url"
+                  id="urlInput"
+                  placeholder="https://example.com"
+                  required
+                />
+                <button
+                  type="submit"
+                  class="btn btn-primary btn-scan"
+                  id="scanBtn"
+                >
+                  <i class="fas fa-search me-1"></i> SCAN
+                </button>
+              </div>
+              <div
+                id="inline-loading"
+                class="mt-3 text-primary fw-bold"
+                style="display: none; font-size: 0.95rem"
+              >
+                <i class="fas fa-circle-notch fa-spin me-2"></i>Sedang
+                menjalankan pemindaian... Mohon tunggu.
+              </div>
+              <div class="form-text mt-2 text-secondary" id="scan-help-text">
+                <small
+                  ><i class="fas fa-info-circle me-1"></i>Gunakan hanya pada
+                  website yang Anda miliki/diizinkan.</small
+                >
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="mb-4">
+        {% for category, message in messages %}
+        <div
+          class="alert alert-{{ category }} alert-dismissible fade show shadow-sm"
+          role="alert"
+        >
+          <strong
+            ><i class="fas fa-exclamation-triangle me-2"></i>Sistem
+            WebSec:</strong
+          >
+          {{ message }}
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+          <div class="stat-card card-custom">
+            <h6 class="text-muted fw-bold mb-3">STATISTIK RISIKO</h6>
+            <div style="height: 200px; max-width: 260px; margin: 0 auto">
+              <canvas id="securityChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="card-custom h-100 p-4">
+            <h5 class="fw-bold mb-3">
+              <i class="fas fa-shield-alt text-primary me-2"></i>
+              Fitur Scanning
+            </h5>
+
+            <p class="text-muted mb-4">
+              Sistem WebSec Checker melakukan analisis keamanan website melalui
+              beberapa fitur utama yang saling terintegrasi. Setiap fitur
+              dirancang untuk mengidentifikasi potensi risiko berdasarkan data
+              aktual dari target.
+            </p>
+
+            <div class="row g-3">
+              <div class="col-md-6 col-lg-4">
+                <div class="p-3 bg-light rounded-4 h-100">
+                  <h6 class="fw-bold mb-1">
+                    <i class="fas fa-globe text-primary me-2"></i>OSINT &
+                    Network
+                  </h6>
+                  <small class="text-muted">
+                    Mengambil informasi IP, WHOIS, dan subdomain untuk melihat
+                    attack surface.
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4">
+                <div class="p-3 bg-light rounded-4 h-100">
+                  <h6 class="fw-bold mb-1">
+                    <i class="fas fa-lock text-success me-2"></i>SSL/TLS
+                    Analysis
+                  </h6>
+                  <small class="text-muted">
+                    Memeriksa sertifikat SSL, masa berlaku, dan protokol
+                    keamanan.
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4">
+                <div class="p-3 bg-light rounded-4 h-100">
+                  <h6 class="fw-bold mb-1">
+                    <i class="fas fa-window-maximize text-warning me-2"></i
+                    >Security Headers
+                  </h6>
+                  <small class="text-muted">
+                    Mengecek header seperti CSP, X-Frame-Options, dan
+                    X-Content-Type-Options.
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4">
+                <div class="p-3 bg-light rounded-4 h-100">
+                  <h6 class="fw-bold mb-1">
+                    <i class="fas fa-network-wired text-danger me-2"></i>Port
+                    Scanning
+                  </h6>
+                  <small class="text-muted">
+                    Mendeteksi port terbuka dan layanan yang berjalan pada
+                    server.
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4">
+                <div class="p-3 bg-light rounded-4 h-100">
+                  <h6 class="fw-bold mb-1">
+                    <i class="fas fa-folder-open text-info me-2"></i>Directory
+                    Scan
+                  </h6>
+                  <small class="text-muted">
+                    Mencari file sensitif seperti .env, .git, backup, dan
+                    config.
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4">
+                <div class="p-3 bg-light rounded-4 h-100">
+                  <h6 class="fw-bold mb-1">
+                    <i class="fas fa-key text-secondary me-2"></i>Data Detection
+                  </h6>
+                  <small class="text-muted">
+                    Mendeteksi API key, password, secret, dan private key.
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4">
+                <div class="p-3 bg-light rounded-4 h-100">
+                  <h6 class="fw-bold mb-1">
+                    <i class="fas fa-layer-group text-primary me-2"></i>Dynamic OWASP Mapping
+                  </h6>
+                  <small class="text-muted">
+                    Mengklasifikasikan temuan ke OWASP Top 10:2025 berdasarkan evidence hasil scan.
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-6">
+                <div class="p-3 bg-light rounded-4 h-100">
+                  <h6 class="fw-bold mb-1">
+                    <i class="fas fa-chart-line text-primary me-2"></i>CVSS v3.1
+                    Scoring
+                  </h6>
+                  <small class="text-muted">
+                    Menghitung tingkat risiko secara dinamis berdasarkan hasil
+                    scan.
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-6">
+                <div class="p-3 bg-light rounded-4 h-100">
+                  <h6 class="fw-bold mb-1">
+                    <i class="fas fa-check-double text-success me-2"></i>Deteksi Tidak Valid
+                  </h6>
+                  <small class="text-muted">
+                    Menggunakan baseline 404, soft 404, SPA detection, dan
+                    validasi content-type.
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Legend tetap dipertahankan -->
+            <div class="row g-2 small mt-4">
+              <div class="col-md-4">
+                <span class="badge bg-danger me-1">Critical</span> data sensitif
+                terkonfirmasi
+              </div>
+              <div class="col-md-4">
+                <span class="badge bg-warning text-dark me-1">Medium</span>
+                exposure perlu verifikasi
+              </div>
+              <div class="col-md-4">
+                <span class="badge bg-info text-dark me-1">Info</span> bukti
+                tidak berbahaya
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-custom">
+        <div
+          class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center"
+        >
+          <h5 class="m-0 fw-bold text-dark">
+            <i class="fas fa-history me-2 text-secondary"></i>Riwayat Pemindaian
+          </h5>
+          <span class="badge bg-light text-dark border">Real-time Data</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light text-uppercase small">
+                <tr>
+                  <th class="ps-4 py-3">Waktu Scan</th>
+                  <th>Target URL</th>
+                  <th class="text-center">Risk Level</th>
+                  <th>Status</th>
+                  <th class="text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for scan in scans %}
+                <tr>
+                  <td
+                    class="ps-4 text-secondary fw-semibold"
+                    style="font-size: 0.9em"
+                  >
+                    {{ scan.timestamp.strftime('%d/%m/%Y') }}<br />
+                    <small class="text-muted"
+                      >{{ scan.timestamp.strftime('%H:%M WITA') }}</small
+                    >
+                  </td>
+                  <td>
+                    <a
+                      href="{{ scan.target_url }}"
+                      target="_blank"
+                      class="text-decoration-none fw-bold text-primary"
+                    >
+                      {{ scan.target_url }}
+                      <i
+                        class="fas fa-external-link-alt small ms-1"
+                        style="font-size: 0.7em"
+                      ></i>
+                    </a>
+                  </td>
+                  <td class="text-center">
+                    <span
+                      class="risk-pill {% if scan.overall_risk == 'Critical' %} bg-dark text-white {% elif scan.overall_risk == 'High' %} bg-danger text-white {% elif scan.overall_risk == 'Medium' %} bg-warning text-dark {% elif scan.overall_risk == 'Low' %} bg-success text-white {% else %} bg-info text-dark {% endif %}"
+                      >{{ scan.overall_risk | upper }}</span
+                    >
+                  </td>
+                  <td>
+                    {% if scan.overall_risk in ['Critical', 'High'] %}
+                    <div class="d-flex align-items-center text-danger fw-bold">
+                      <i class="fas fa-times-circle fa-lg me-2"></i>Butuh
+                      Penanganan
+                    </div>
+                    {% elif scan.overall_risk == 'Medium' %}
+                    <div class="d-flex align-items-center text-warning fw-bold">
+                      <i class="fas fa-exclamation-triangle fa-lg me-2"></i
+                      >Perlu Verifikasi
+                    </div>
+                    {% else %}
+                    <div class="d-flex align-items-center text-success fw-bold">
+                      <i class="fas fa-check-circle fa-lg me-2"></i>Terkendali
+                    </div>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group shadow-sm" role="group">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary fw-bold"
+                        data-bs-toggle="modal"
+                        data-bs-target="#detailModal{{ scan.id }}"
+                      >
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <a
+                        href="{{ url_for('main.download_report', scan_id=scan.id) }}"
+                        class="btn btn-sm btn-outline-success fw-bold"
+                        title="Download PDF"
+                        ><i class="fas fa-file-pdf"></i
+                      ></a>
+                      <form
+                        action="/delete/{{ scan.id }}"
+                        method="POST"
+                        onsubmit="
+                          return confirm(
+                            'Apakah Anda yakin ingin menghapus data ini?',
+                          );
+                        "
+                        style="display: inline"
+                      >
+                        <button
+                          type="submit"
+                          class="btn btn-sm btn-outline-danger fw-bold"
+                          title="Hapus"
+                        >
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </form>
+                    </div>
+
+                    <div
+                      class="modal fade"
+                      id="detailModal{{ scan.id }}"
+                      tabindex="-1"
+                      aria-hidden="true"
+                    >
+                      <div
+                        class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered"
+                      >
+                        <div class="modal-content shadow">
+                          <div class="modal-header">
+                            <h5 class="modal-title fw-bold">
+                              <i
+                                class="fas fa-file-medical-alt me-2 text-primary"
+                              ></i
+                              >Hasil Analisis
+                            </h5>
+                            <button
+                              type="button"
+                              class="btn-close"
+                              data-bs-dismiss="modal"
+                              aria-label="Close"
+                            ></button>
+                          </div>
+                          <div class="modal-body text-start p-4">
+                            <div class="row g-3 mb-4">
+                              <div class="col-md-5">
+                                <div
+                                  class="summary-box text-center h-100 d-flex flex-column justify-content-center"
+                                >
+                                  <small
+                                    class="text-uppercase fw-bold text-muted"
+                                    >Risk Level</small
+                                  >
+                                  <h2 class="display-6 fw-black mb-0 mt-1">
+                                    {{ scan.overall_risk | upper }}
+                                  </h2>
+                                </div>
+                              </div>
+                              <div class="col-md-7">
+                                <div
+                                  class="summary-box h-100 d-flex align-items-center"
+                                >
+                                  <div>
+                                    <small
+                                      class="text-muted text-uppercase fw-bold d-block"
+                                      >Target URL</small
+                                    ><span class="fw-bold text-break"
+                                      >{{ scan.target_url }}</span
+                                    >
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <h6
+                              class="text-secondary fw-bold mb-3 border-bottom pb-2"
+                            >
+                              Rincian Evidence & Rekomendasi
+                            </h6>
+                            {{ scan.vulnerabilities | safe }}
+                          </div>
+                          <div class="modal-footer bg-light">
+                            <button
+                              type="button"
+                              class="btn btn-secondary"
+                              data-bs-dismiss="modal"
+                            >
+                              Tutup
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="5" class="text-center py-5 text-muted bg-light">
+                    <div class="py-4">
+                      <i
+                        class="fas fa-server fa-3x mb-3 text-secondary opacity-50"
+                      ></i>
+                      <h5>Belum ada data scan</h5>
+                      <p class="small">Silakan masukkan URL di atas.</p>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <footer class="text-center text-muted py-5 small">
+        &copy; 2026 <strong>WebSec Checker</strong> - Website Security Audit System
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      const countCritical = Number("{{ stats.critical | default(0) }}");
+      const countHigh = Number("{{ stats.high | default(0) }}");
+      const countMedium = Number("{{ stats.medium | default(0) }}");
+      const countLow = Number("{{ stats.low | default(0) }}");
+      const countInfo = Number("{{ stats.info | default(0) }}");
+      const totalData =
+        countCritical + countHigh + countMedium + countLow + countInfo;
+      new Chart(document.getElementById("securityChart").getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: ["Critical", "High", "Medium", "Low", "Info/Aman"],
+          datasets: [
+            {
+              data:
+                totalData === 0
+                  ? [1]
+                  : [
+                      countCritical,
+                      countHigh,
+                      countMedium,
+                      countLow,
+                      countInfo,
+                    ],
+              backgroundColor:
+                totalData === 0
+                  ? ["#e9ecef"]
+                  : ["#212529", "#dc3545", "#ffc107", "#198754", "#0dcaf0"],
+              borderWidth: 0,
+              hoverOffset: 10,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { usePointStyle: true, padding: 15 },
+            },
+            tooltip: { enabled: totalData !== 0 },
+          },
+          cutout: "70%",
+        },
+      });
+      document.addEventListener("DOMContentLoaded", function () {
+        const scanForm = document.getElementById("scanForm");
+        const scanBtn = document.getElementById("scanBtn");
+        const urlInput = document.getElementById("urlInput");
+        const inlineLoading = document.getElementById("inline-loading");
+        const helpText = document.getElementById("scan-help-text");
+        if (scanForm) {
+          scanForm.addEventListener("submit", function () {
+            scanBtn.disabled = true;
+            urlInput.readOnly = true;
+            scanBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin me-1"></i> PROSES...';
+            scanBtn.classList.remove("btn-primary");
+            scanBtn.classList.add("btn-warning", "text-dark");
+            inlineLoading.style.display = "block";
+            helpText.style.display = "none";
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+python-dotenv
+python-nmap
+requests
+WeasyPrint
+pymysql
+cryptography
+Werkzeug
+Jinja2
+SQLAlchemy
+urllib3
+certifi
+idna
+charset-normalizer
