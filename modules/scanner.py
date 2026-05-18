@@ -876,16 +876,16 @@ def get_osint_subdomains_html(domain):
     subdomains = sorted(subdomains)
 
     top = "".join(
-        [f"<li>{sanitize(s)}</li>" for s in subdomains[:25]]
-    )
+    [f"<li>{sanitize(s)}</li>" for s in subdomains]
+)
 
-    extra = (
-        f"<p class='muted-small'>+ {len(subdomains)-25} subdomain lain tidak ditampilkan.</p>"
-        if len(subdomains) > 25
-        else ""
-    )
-
-    content = f"<ul class='compact-list'>{top}</ul>{extra}"
+    content = f"""
+    <div style="max-height:400px; overflow-y:auto;">
+    <ul class='compact-list'>
+        {top}
+    </ul>
+    </div>
+    """
 
     return create_card_html(
         "🔎 OSINT",
