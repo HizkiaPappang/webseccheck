@@ -781,77 +781,123 @@ def get_whois_scraped_html(domain):
 
 
 def get_osint_subdomains_html(domain):
-    try:
-        url = f"https://crt.sh/?q=%25.{domain}&output=json"
+    subdomains = set()
 
+    sources = [
+        f"https://crt.sh/?q=%25.{domain}&output=json",
+        f"https://api.hackertarget.com/hostsearch/?q={domain}",
+    ]
+
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+
+    # =========================
+    # SOURCE 1 : CRT.SH
+    # =========================
+    try:
         res = requests.get(
-            url,
-            timeout=15,
-            headers={"User-Agent": "Mozilla/5.0"},
+            sources[0],
+            timeout=5,
+            headers=headers,
             verify=False
         )
 
-        if res.status_code != 200:
-            return ""
+        if res.status_code == 200:
+            data = res.json()
 
-        data = res.json()
+            for item in data:
+                name = item.get("name_value", "")
 
-        subdomains = set()
+                for sub in name.split("\n"):
+                    sub = sub.strip().lower()
 
-        for item in data:
-            name = item.get("name_value", "")
-            for sub in name.split("\n"):
-                sub = sub.strip().lower()
+                    if (
+                        sub
+                        and "*" not in sub
+                        and domain in sub
+                    ):
+                        subdomains.add(sub)
 
-                if (
-                    sub
-                    and "*" not in sub
-                    and domain in sub
-                ):
-                    subdomains.add(sub)
+    except requests.exceptions.Timeout:
+        pass
 
-        if not subdomains:
-            return ""
+    except Exception:
+        pass
 
-        subdomains = sorted(subdomains)
-
-        top = "".join(
-            [f"<li>{sanitize(s)}</li>" for s in subdomains[:25]]
+    # =========================
+    # SOURCE 2 : HACKERTARGET
+    # =========================
+    try:
+        res = requests.get(
+            sources[1],
+            timeout=5,
+            headers=headers,
+            verify=False
         )
 
-        extra = (
-            f"<p class='muted-small'>+ {len(subdomains)-25} subdomain lain tidak ditampilkan.</p>"
-            if len(subdomains) > 25
-            else ""
-        )
+        if res.status_code == 200:
 
-        content = f"<ul class='compact-list'>{top}</ul>{extra}"
+            for line in res.text.splitlines():
 
-        return create_card_html(
-            "🔎 OSINT",
-            "#20c997",
-            f"Subdomain Enumeration ({len(subdomains)} ditemukan)",
-            content,
-            0.0,
-            "Informational",
-            "Subdomain publik berhasil ditemukan melalui Certificate Transparency Logs.",
-            "Pastikan semua subdomain aktif dipantau dan diamankan.",
-            80
-        )
+                if "," in line:
+                    sub = line.split(",")[0].strip().lower()
 
-    except Exception as e:
+                    if (
+                        sub
+                        and "*" not in sub
+                        and domain in sub
+                    ):
+                        subdomains.add(sub)
+
+    except Exception:
+        pass
+
+    # =========================
+    # NO RESULT
+    # =========================
+    if not subdomains:
+
         return create_card_html(
             "🔎 OSINT",
             "#6c757d",
-            "Subdomain Enumeration Failed",
-            f"Error: {sanitize(str(e))}",
+            "Subdomain Enumeration Unavailable",
+            "Tidak ada data subdomain yang berhasil diambil dari sumber OSINT.",
             0.0,
             "Informational",
-            "Gagal mengambil data subdomain.",
-            "Periksa koneksi internet atau layanan crt.sh.",
+            "Layanan OSINT eksternal sedang lambat atau memblokir request.",
+            "Coba ulang beberapa saat lagi atau gunakan sumber OSINT lain.",
             0
         )
 
+    # =========================
+    # FORMAT OUTPUT
+    # =========================
+    subdomains = sorted(subdomains)
+
+    top = "".join(
+        [f"<li>{sanitize(s)}</li>" for s in subdomains[:25]]
+    )
+
+    extra = (
+        f"<p class='muted-small'>+ {len(subdomains)-25} subdomain lain tidak ditampilkan.</p>"
+        if len(subdomains) > 25
+        else ""
+    )
+
+    content = f"<ul class='compact-list'>{top}</ul>{extra}"
+
+    return create_card_html(
+        "🔎 OSINT",
+        "#20c997",
+        f"Subdomain Enumeration ({len(subdomains)} ditemukan)",
+        content,
+        0.0,
+        "Informational",
+        "Subdomain publik berhasil ditemukan melalui sumber OSINT.",
+        "Pastikan seluruh subdomain aktif dipantau dan diamankan.",
+        80
+    )
 
 def perform_scan(target_url):
     hostname = normalize_hostname(target_url)
