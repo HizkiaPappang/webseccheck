@@ -112,8 +112,7 @@ class Evidence:
 
     @property
     def confirmed_sensitive_exposure(self):
-        # Critical exposure hanya berlaku untuk file/path sensitif.
-        # Halaman login/admin normal tidak boleh menjadi Critical hanya karena ada teks seperti "api" di HTML.
+        
         sensitive_categories = {"env_files", "git_files", "backup_files", "info_leak"}
         return (
             self.status_code == 200

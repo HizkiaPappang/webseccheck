@@ -27,6 +27,7 @@ def calculate_cvss_31(metrics):
     i = CVSS_LABELS["I"]["values"][metrics["I"]][1]
     a = CVSS_LABELS["A"]["values"][metrics["A"]][1]
 
+#hitung impac sub score
     iss = 1 - ((1 - c) * (1 - i) * (1 - a))
 
     if scope == "U":
@@ -34,6 +35,7 @@ def calculate_cvss_31(metrics):
     else:
         impact = 7.52 * (iss - 0.029) - 3.25 * pow((iss - 0.02), 15)
 
+#hitung exploitability
     exploitability = 8.22 * av * ac * pr * ui
 
     if impact <= 0:
@@ -56,7 +58,7 @@ def cvss_numeric_value(code, value, scope):
         numeric = numeric[scope]
     return label, numeric
 
-
+#tampilan di website
 def explain_cvss_31(metrics):
     scope = metrics["S"]
 
