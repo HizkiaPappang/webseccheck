@@ -156,7 +156,6 @@ class DynamicScoringEngine:
             )
 
         # Halaman login/admin yang hanya terdeteksi publik tidak boleh langsung dinilai Critical.
-        # Login publik adalah kondisi normal pada portal, LMS, SIAKAD, e-learning, dan aplikasi berbasis autentikasi.
         auth_keywords = {"login", "admin", "administrator", "dashboard", "panel", "signin", "sign-in", "auth"}
         if ev.category == "admin_panels" or str(ev.target).lower().strip("/") in auth_keywords:
             return self._result(
