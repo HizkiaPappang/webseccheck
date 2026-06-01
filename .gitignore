@@ -1,0 +1,21 @@
+WebSec_TA_Project/
+│
+├── .gitignore      ← buat di sini
+├── run.py
+├── requirements.txt
+├── README.md
+│
+├── app/
+│   ├── __init__.py
+│   ├── routes.py
+│   └── models.py
+│
+├── modules/
+│   ├── scanner.py
+│   ├── cvss_calculator.py
+│   └── vulnerability_db.py
+│
+├── instance/
+│   └── websec.db
+│
+└── venv/
