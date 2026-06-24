@@ -343,12 +343,7 @@ class DynamicScoringEngine:
 SCORING = DynamicScoringEngine()
 
 class OwaspMapper:
-    """Klasifikasi OWASP Top 10:2025 berbasis evidence hasil scan.
-
-    OWASP digunakan sebagai kerangka klasifikasi, bukan sebagai kalkulator skor.
-    Skor risiko tetap dihitung oleh CVSS v3.1, sedangkan class ini menentukan
-    kategori OWASP yang paling relevan berdasarkan karakteristik evidence.
-    """
+    """Klasifikasi OWASP Top 10:2021 berbasis evidence hasil scan."""
 
     DATABASE_PORTS = {3306, 5432, 6379, 9200, 27017, 1521, 1433}
     REMOTE_ACCESS_PORTS = {21, 22, 23, 3389, 5900}
@@ -359,7 +354,7 @@ class OwaspMapper:
         target = str(getattr(ev, "target", "") or "").lower()
         category = str(getattr(ev, "category", "") or "").lower()
         finding_type = str(getattr(ev, "finding_type", "") or "").lower()
-        header_name = str(getattr(ev, "header_name", "") or "").lower()
+        header_name = str(getattr(ev, "header_name", "") or "")
         port_number = int(getattr(ev, "port_number", 0) or 0)
         ssl_protocol = str(getattr(ev, "ssl_protocol", "") or "")
         ssl_days = getattr(ev, "ssl_days_remaining", None)
@@ -372,67 +367,91 @@ class OwaspMapper:
                 "reason": "Temuan ditandai sebagai false positive sehingga tidak dipetakan sebagai kerentanan OWASP aktif.",
             }
 
-        if category == "admin_panels" or any(x in target for x in ["admin", "administrator", "dashboard", "login", "panel"]):
+        # Halaman login/admin publik belum tentu Broken Access Control
+        if category == "admin_panels" or any(
+            x in target for x in ["admin", "administrator", "dashboard", "login", "panel"]
+        ):
             return {
                 "id": "N/A",
                 "name": "Public Authentication Interface",
-                "reason": "Halaman login/admin terdeteksi dapat diakses publik. Kondisi ini umum pada aplikasi web yang membutuhkan autentikasi pengguna dan belum membuktikan Broken Access Control.",
+                "reason": "Halaman login/admin dapat diakses publik. Kondisi ini belum membuktikan Broken Access Control tanpa pengujian autentikasi dan otorisasi.",
             }
 
+        # A02: Cryptographic Failures
+        if finding_type == "ssl" and (
+            (ssl_days is not None and ssl_days <= 0)
+            or ssl_protocol in {"TLSv1", "TLSv1.1"}
+        ):
+            return {
+                "id": "A02:2021",
+                "name": "Cryptographic Failures",
+                "reason": "Masalah SSL/TLS terdeteksi, seperti sertifikat kedaluwarsa atau penggunaan protokol TLS lama.",
+            }
+
+        # A03: Injection - hanya indikasi, bukan konfirmasi
+        if any(x in target for x in ["sql", "query", "search", "id="]):
+            return {
+                "id": "A03:2021",
+                "name": "Injection",
+                "reason": "Parameter yang berkaitan dengan query terdeteksi. Perlu pengujian khusus untuk memastikan adanya kerentanan Injection.",
+            }
+
+        # A05: Security Misconfiguration
         if finding_type == "header":
             return {
-                "id": "A02:2025",
+                "id": "A05:2021",
                 "name": "Security Misconfiguration",
                 "reason": f"Header keamanan {header_name or 'HTTP'} tidak ditemukan pada response utama.",
             }
 
         if category in {"env_files", "git_files", "backup_files", "info_leak"}:
             return {
-                "id": "A02:2025",
+                "id": "A05:2021",
                 "name": "Security Misconfiguration",
                 "reason": "File konfigurasi, backup, metadata, atau informasi teknis terekspos melalui web root.",
             }
 
         if sensitive_hits:
             return {
-                "id": "A02:2025",
+                "id": "A05:2021",
                 "name": "Security Misconfiguration",
                 "reason": "Response mengandung pola data sensitif seperti credential, token, API key, atau secret.",
             }
 
         if port_number in OwaspMapper.DATABASE_PORTS:
             return {
-                "id": "A02:2025",
+                "id": "A05:2021",
                 "name": "Security Misconfiguration",
-                "reason": "Port database/service internal terbuka ke jaringan publik.",
+                "reason": "Port database atau service internal terbuka ke jaringan publik.",
             }
 
-        if port_number in OwaspMapper.REMOTE_ACCESS_PORTS or port_number in OwaspMapper.DEV_ADMIN_PORTS:
+        if (
+            port_number in OwaspMapper.REMOTE_ACCESS_PORTS
+            or port_number in OwaspMapper.DEV_ADMIN_PORTS
+        ):
             return {
-                "id": "A02:2025",
+                "id": "A05:2021",
                 "name": "Security Misconfiguration",
                 "reason": "Service remote access, development, atau panel alternatif terdeteksi sebagai attack surface publik.",
             }
 
-        if any(x in target for x in ["vendor", "node_modules", "composer.lock", "package-lock.json", "yarn.lock"]):
+        # A06: Vulnerable and Outdated Components
+        if getattr(ev, "service_version", ""):
             return {
-                "id": "A03:2025",
-                "name": "Software Supply Chain Failures",
-                "reason": "File dependency/package manager terdeteksi dan dapat membuka informasi rantai pasok perangkat lunak.",
+                "id": "A06:2021",
+                "name": "Vulnerable and Outdated Components",
+                "reason": "Versi service atau komponen terdeteksi. Perlu dicocokkan dengan database CVE untuk memastikan apakah komponen rentan atau usang.",
             }
 
-        if finding_type == "ssl" and ((ssl_days is not None and ssl_days <= 0) or ssl_protocol in {"TLSv1", "TLSv1.1"}):
+        # A08: Software and Data Integrity Failures
+        if any(
+            x in target
+            for x in ["vendor", "node_modules", "composer.lock", "package-lock.json", "yarn.lock"]
+        ):
             return {
-                "id": "A04:2025",
-                "name": "Cryptographic Failures",
-                "reason": "Masalah SSL/TLS terdeteksi, seperti sertifikat kedaluwarsa atau protokol TLS lama.",
-            }
-
-        if any(x in target for x in ["sql", "query", "search", "id="]):
-            return {
-                "id": "A05:2025",
-                "name": "Injection",
-                "reason": "Parameter atau artefak yang berkaitan dengan query terdeteksi. Perlu pengujian khusus untuk konfirmasi injection.",
+                "id": "A08:2021",
+                "name": "Software and Data Integrity Failures",
+                "reason": "File dependency atau package manager terekspos sehingga dapat membuka informasi rantai pasok perangkat lunak.",
             }
 
         return {
@@ -672,7 +691,7 @@ def create_card_html(badge_text, badge_color, title, body_content, score=None, s
         owasp_reason = sanitize(owasp.get("reason", "-"))
         owasp_html = f"""
         <div class="finding-evidence">
-            <b>OWASP Top 10:2025</b><br>
+            <b>OWASP Top 10:2021</b><br>
             <span class="finding-pill" style="background:#0d6efd;">{owasp_id}</span>
             <b>{owasp_name}</b><br>
             <small>{owasp_reason}</small>
