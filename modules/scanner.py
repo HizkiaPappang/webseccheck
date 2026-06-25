@@ -250,31 +250,25 @@ class DynamicScoringEngine:
         # Static CVSS v3.1 metrics mapping for missing HTTP security headers.
         # Metrics are assigned based on the expected security impact of each missing header.
         header_metrics = {
-    "strict-transport-security": {
-        "AV": "N", "AC": "L", "PR": "N", "UI": "R",
-        "S": "U", "C": "H", "I": "L", "A": "N"
-    },
-    "content-security-policy": {
-        "AV": "N", "AC": "L", "PR": "N", "UI": "R",
-        "S": "U", "C": "H", "I": "H", "A": "L"
-    },
-    "x-frame-options": {
-        "AV": "N", "AC": "L", "PR": "N", "UI": "R",
-        "S": "U", "C": "L", "I": "L", "A": "N"
-    },
-    "x-content-type-options": {
-        "AV": "N", "AC": "L", "PR": "N", "UI": "R",
-        "S": "U", "C": "L", "I": "L", "A": "N"
-    },
-    "referrer-policy": {
-        "AV": "N", "AC": "L", "PR": "N", "UI": "R",
-        "S": "U", "C": "L", "I": "N", "A": "N"
-    },
-    "permissions-policy": {
-        "AV": "N", "AC": "L", "PR": "N", "UI": "R",
-        "S": "U", "C": "L", "I": "N", "A": "N"
-    },
-}
+            "strict-transport-security": {
+                "AV": "N", "AC": "L", "PR": "N", "UI": "R", "S": "U", "C": "L", "I": "L", "A": "N"
+            },
+            "content-security-policy": {
+                "AV": "N", "AC": "L", "PR": "N", "UI": "R", "S": "U", "C": "L", "I": "L", "A": "N"
+            },
+            "x-frame-options": {
+                "AV": "N", "AC": "L", "PR": "N", "UI": "R", "S": "U", "C": "L", "I": "L", "A": "N"
+            },
+            "x-content-type-options": {
+                "AV": "N", "AC": "L", "PR": "N", "UI": "R", "S": "U", "C": "L", "I": "L", "A": "N"
+            },
+            "referrer-policy": {
+                "AV": "N", "AC": "L", "PR": "N", "UI": "R", "S": "U", "C": "L", "I": "N", "A": "N"
+            },
+            "permissions-policy": {
+                "AV": "N", "AC": "L", "PR": "N", "UI": "R", "S": "U", "C": "L", "I": "L", "A": "N"
+            },
+        }
 
         metrics = header_metrics.get(name, {
             "AV": "N", "AC": "L", "PR": "N", "UI": "R", "S": "U", "C": "N", "I": "L", "A": "N"
